@@ -1,0 +1,17 @@
+data structure
+
+class tasklist
+  has many tasks[]
+
+  :list_tasks
+
+class TaskEngine
+  has many tasklists
+
+
+  :authorize
+
+  :initialize
+
+  :list_tasklists
+
