@@ -86,6 +86,36 @@ class TaskEngine
     ).data.to_hash["items"]
   end
 
+  # Inserts a task into a task list.
+  # Tasklist is passed in, but refers to an instance variable
+  # of the TaskEngine.
+  def insert_task(task, tasklist)
+    result = @client.execute(
+      :api_method => @api.tasks.insert,
+      :body_object => task,
+      :parameters => {:tasklist => tasklist["id"]}
+    )
+    get_tasks(tasklist)
+  end
+
+  def delete_task(task, tasklist)
+    result = @client.execute(
+      :api_method => @api.tasks.delete,
+      :parameters => {:tasklist => tasklist["id"], :task => task["id"]}
+    )
+    get_tasks(tasklist)
+    
+  end
+
+  def update_task(task, tasklist, update_hash)
+    results = @client.execute(
+      :api_method => @api.tasks.patch,
+      :body_object => update_hash,
+      :parameters => {:tasklist => tasklist["id"], :task => task["id"]}
+    )
+    get_tasks(tasklist)
+  end 
+
 end
 
 if $0 == __FILE__

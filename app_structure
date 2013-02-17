@@ -8,10 +8,14 @@ class tasklist
 class TaskEngine
   has many tasklists
 
-
   :authorize
 
   :initialize
 
-  :list_tasklists
+  :get_tasklists
 
+  :get_tasks(tasklist)
+
+  :insert_task(task, tasklist)
+
+  :insert_tasklist(tasklist)

@@ -4,6 +4,7 @@ gem 'pry'
 gem 'google-api-client', '>= 0.5'
 gem 'launchy', '>= 2.1.1'
 gem 'encryptor'
+gem 'rbcurse'
 
 group :development do
   gem 'guard'
