@@ -10,6 +10,10 @@ class Tasklist < Hash
   attr_accessor :tasks
 end
 
+class Task < Hash
+  attr_accessor :parent
+end
+
 class TaskEngine
 
   CLIENT_ID = '843951960730-ugvc3nvoiugblhsk7b1s992o8ao2pu2l.apps.googleusercontent.com'
@@ -114,6 +118,7 @@ class TaskEngine
       :parameters => {:tasklist => tasklist["id"], :task => task["id"]}
     )
     get_tasks(tasklist)
+    return tasklist.tasks.select { |h| h["id"] == task["id"] }[0]
   end 
 
 end
