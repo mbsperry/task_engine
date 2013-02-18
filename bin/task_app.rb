@@ -29,7 +29,22 @@ class AppHelper
   end
 
   def update_at_index(task_index, tasklist_index, update_hash)
+    tasklist = @engine.tasklists[tasklist_index]
+    task = tasklist.tasks[task_index]
+    @engine.update_task(task, tasklist, update_hash)
   end
+
+  def toggle_status(task_index, tasklist_index)
+    tasklist = @engine.tasklists[tasklist_index]
+    task = tasklist.tasks[task_index]
+    update_hash = case task["status"]
+                 when "needsAction" then {"status" => "completed"}
+                 when "completed" then {"status" => "needsAction",
+                                        "completed" => nil}
+                 end
+    result = @engine.update_task(task, tasklist, update_hash)
+  end
+
 end
 
 if $0 == __FILE__ then
@@ -58,6 +73,14 @@ if $0 == __FILE__ then
           :row => 1, :height => FFI::NCurses.LINES-4 )
         @task_lb.vieditable_init_listbox
       end #stack
+
+      @task_lb.bind_key(32) { |t|
+        app_helper.toggle_status(t.current_index, tasklist_lb.current_index)
+        curr_index = t.current_index
+        @task_lb.remove_all
+        @task_lb.list(app_helper.get_task_titles(tasklist_lb.current_index))
+        @task_lb.current_index = curr_index
+      }
       @task_lb.bind_key(?e, "Edit Task") { |t|
       } #bind_key(e)
 
