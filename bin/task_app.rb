@@ -59,11 +59,7 @@ if $0 == __FILE__ then
                             :width_pc => "30"
                            )
       tasklist_lb.bind_key(?l, "Select List") do |t|
-        @task_lb.remove_all
-        l = app_helper.get_task_titles(tasklist_lb.current_index)
-        l.each_with_index { |x, i|
-          @task_lb[i] = x
-        }
+        @task_lb.list(app_helper.get_task_titles(tasklist_lb.current_index))
       end #bind_key(l)
 
       stack :margin_top => 0, :width_pc => ww-20 do
@@ -77,7 +73,6 @@ if $0 == __FILE__ then
       @task_lb.bind_key(32) { |t|
         app_helper.toggle_status(t.current_index, tasklist_lb.current_index)
         curr_index = t.current_index
-        @task_lb.remove_all
         @task_lb.list(app_helper.get_task_titles(tasklist_lb.current_index))
         @task_lb.current_index = curr_index
       }
