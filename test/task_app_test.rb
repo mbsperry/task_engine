@@ -5,6 +5,12 @@ class TestApp < Test::Unit::TestCase
 
   @@app_help = AppHelper.new
 
+  def setup 
+    @tasklist_index = 2       # Use the testing tasklist
+    @default_tl = @@app_help.engine.tasklists[2]
+    @default_task = @default_tl.tasks[0]
+  end
+
   def test_get_tasklist_titles
     titles = @@app_help.get_tasklist_titles()
     assert_instance_of(Array, titles)
@@ -13,20 +19,25 @@ class TestApp < Test::Unit::TestCase
   end
 
   def test_get_task_titles
-    task_titles = @@app_help.get_task_titles(2)
+    task_titles = @@app_help.get_task_titles(@tasklist_index)
     assert_match(/\[.\] \w+/, task_titles[0])
   end
 
-  def test_update_task_title
-    old_task_title = @@app_help.engine.tasklists[2].tasks[0]["title"]
-    tasklist = @@app_help.engine.tasklists[2]
-    task = @@app_help.engine.tasklists[2].tasks[0]
-    update_hash = { "title" => old_task_title + "OLD" }
-    @@app_help.engine.update_task(task, tasklist, update_hash)
-    new_task_title = @@app_help.engine.tasklists[2].tasks[0]["title"]
-    assert_equal(old_task_title + "OLD", new_task_title) 
-    
+  def test_update_at_index
+    old_title = @@app_help.engine.tasklists[@tasklist_index].tasks[0]["title"]
+    update_hash = {"title" => old_title + "OLD"}
+    updated_task = @@app_help.update_at_index(0,@tasklist_index,update_hash)
+    assert_equal(old_title + "OLD", updated_task["title"])
+    @@app_help.update_at_index(0,@tasklist_index,{"title" => old_title})
   end
+
+  def test_toggle_status
+    old_status = @default_task["status"]
+    @@app_help.toggle_status(0, @tasklist_index)
+    assert_not_equal(old_status,
+                     @@app_help.engine.tasklists[@tasklist_index].tasks[0]["status"])
+  end
+
 
 end
 
