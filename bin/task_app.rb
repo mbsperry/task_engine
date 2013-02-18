@@ -1,5 +1,10 @@
 require 'rbcurse/core/util/app'
+require 'rbcurse/core/include/vieditable'
 require_relative '../lib/task_engine'
+
+class RubyCurses::List
+  include ViEditable
+end
 
 class AppHelper
 
@@ -22,6 +27,9 @@ class AppHelper
       end
       "#{status_string} #{x["title"]}" }
   end
+
+  def update_at_index(task_index, tasklist_index, update_hash)
+  end
 end
 
 if $0 == __FILE__ then
@@ -31,8 +39,10 @@ if $0 == __FILE__ then
     ww = FFI::NCurses.COLS-0
     flow :width => ww, :margin_top => 1, :height => FFI::NCurses.LINES-2 do
 
-      tasklist_lb = listbox :list => app_helper.get_tasklist_titles, :title => "[ Tasklists ]",
-        :width_pc => "30"
+      tasklist_lb = listbox(:list => app_helper.get_tasklist_titles, 
+                            :title => "[ Tasklists ]", 
+                            :width_pc => "30"
+                           )
       tasklist_lb.bind_key(?l, "Select List") do |t|
         @task_lb.remove_all
         l = app_helper.get_task_titles(tasklist_lb.current_index)
@@ -42,13 +52,13 @@ if $0 == __FILE__ then
       end #bind_key(l)
 
       stack :margin_top => 0, :width_pc => ww-20 do
-        @task_lb = listbox :list => app_helper.get_task_titles(0), 
+        @task_lb = listbox( :list => app_helper.get_task_titles(0), 
           :title => "[ todos ]", 
           :name => "tasks", 
-          :row => 1, :height => FFI::NCurses.LINES-4
+          :row => 1, :height => FFI::NCurses.LINES-4 )
+        @task_lb.vieditable_init_listbox
       end #stack
       @task_lb.bind_key(?e, "Edit Task") { |t|
-# Need something here
       } #bind_key(e)
 
     end #flow
