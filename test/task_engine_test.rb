@@ -35,4 +35,14 @@ class TestTaskEngine < Test::Unit::TestCase
     assert_equal(task_count-1,@@engine.tasklists[2].tasks.size)
   end
 
+  def test_update_task
+    tl = @@engine.tasklists[2]
+    task = tl.tasks[0]
+    old_title = task["title"]
+    update = {"title" => old_title + "OLD"}
+    updated_task = @@engine.update_task(task, tl, update)
+    assert_equal(old_title + "OLD", updated_task["title"])
+    @@engine.update_task(updated_task, tl, {"title" => old_title})
+  end
+
 end
