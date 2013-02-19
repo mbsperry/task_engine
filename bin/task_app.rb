@@ -1,3 +1,12 @@
+# TODO:
+#   - Remove vieditable include
+#   - Build my own bindings for adding, editing and deleting tasks
+#   - Add methods for sorting tasks
+#   - Add methods for showing task due dates.
+#       Maybe as a sub-list?
+#   - Add binding for showing popup with task notes
+
+
 require 'rbcurse/core/util/app'
 require 'rbcurse/core/include/vieditable'
 require_relative '../lib/task_engine'
