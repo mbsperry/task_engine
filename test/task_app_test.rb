@@ -38,6 +38,12 @@ class TestApp < Test::Unit::TestCase
                      @@app_help.engine.tasklists[@testlist_index].tasks[0]["status"])
   end
 
+  def test_task_at_index
+    task = @@app_help.engine.tasklists[@testlist_index].tasks[0]
+    test_task = @@app_help.task_at_index(0, @testlist_index)
+    assert_equal(task["title"], test_task["title"])
+  end
+
 
 end
 
