@@ -2,3 +2,4 @@ Gemfile.lock
 .DS_Store
 auth.txt
 rbc13.log
+pkg/

@@ -4,8 +4,8 @@ require File.expand_path('../lib/task_engine/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Matthew Sperry"]
   gem.email         = ["mbsperry@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = ["A simple ruby wrapper for the google tasks api"]
+  gem.summary       = ["Google tasks via ruby"]
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
