@@ -16,8 +16,8 @@ end
 
 class TaskEngine
 
-  CLIENT_ID = '843951960730-ugvc3nvoiugblhsk7b1s992o8ao2pu2l.apps.googleusercontent.com'
-  CLIENT_SECRET = 'xMeRi5c5HisYLDdULeYCWlG7'
+  CLIENT_ID = '899384542577.apps.googleusercontent.com'
+  CLIENT_SECRET = 'zHFuLpyVtJRQ0qP-WZki2DCO'
   OAUTH_SCOPE = 'https://www.googleapis.com/auth/tasks'
   REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
@@ -121,8 +121,4 @@ class TaskEngine
     return tasklist.tasks.select { |h| h["id"] == task["id"] }[0]
   end 
 
-end
-
-if $0 == __FILE__
-  a = TaskEngine.new
 end
