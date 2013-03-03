@@ -13,5 +13,15 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "task_engine"
   gem.require_paths = ["lib"]
+
+  gem.add_dependency('google-api-client', '>=0.5')
+  gem.add_dependency('launchy', '>= 2.1.1')
+  gem.add_dependency('encryptor')
+
+  gem.add_development_dependency('guard')
+  gem.add_development_dependency('guard-test')
+  gem.add_development_dependency('rb-fsevent')
+  gem.add_development_dependency('terminal-notifier-guard')
+
   gem.version       = TaskEngine::VERSION
 end

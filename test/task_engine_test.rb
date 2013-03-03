@@ -3,7 +3,7 @@ require_relative '../lib/task_engine'
 
 class TestTaskEngine < Test::Unit::TestCase
 
-  @@engine = TaskEngine.new
+  @@engine = TaskEngine::Engine.new
 
   def setup 
     @testlist_index = @@engine.tasklists.index { |x| x["title"] == "Test" }     # use the testing tasklist
