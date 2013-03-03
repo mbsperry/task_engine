@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'google/api_client'
 require 'launchy'
-require 'pry'
 require 'encryptor'
 
 # A simple Hash wrapper that includes a tasks instance variable
@@ -28,11 +27,11 @@ module TaskEngine
     attr_reader :client
     attr_accessor :tasklists
 
-    def initialize
+    def initialize(auth_file=nil)
       @tasklists = []
 
       setup
-      authorize
+      authorize(auth_file)
       get_tasklists
       @tasklists.each { |tl|
         get_tasks(tl)
@@ -48,7 +47,7 @@ module TaskEngine
     end
 
     # Request authorization
-    def authorize
+    def authorize(auth_file)
       @client.authorization.client_id = CLIENT_ID
       @client.authorization.client_secret = CLIENT_SECRET
       @client.authorization.scope = OAUTH_SCOPE
@@ -58,7 +57,13 @@ module TaskEngine
 
       # Does auth code exist?
       # Or get a new one and exchange it for the access token
-      if File.exists?("auth.txt")
+      if auth_file
+        File.open(auth_file, "r") { |file|
+          @client.authorization.refresh_token = file.gets.chomp.decrypt
+          @client.authorization.grant_type = 'refresh_token'
+          auth = @client.authorization.fetch_access_token!
+        }
+      elsif File.exists?("auth.txt")
         File.open("auth.txt", "r") { |file|
           @client.authorization.refresh_token = file.gets.chomp.decrypt
           @client.authorization.grant_type = 'refresh_token'
