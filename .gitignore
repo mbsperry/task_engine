@@ -3,3 +3,4 @@ Gemfile.lock
 auth.txt
 rbc13.log
 pkg/
+.bundle

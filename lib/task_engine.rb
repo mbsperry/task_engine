@@ -47,7 +47,7 @@ module TaskEngine
     end
 
     # Request authorization
-    def authorize(auth_file)
+    def authorize(auth_file=nil)
       @client.authorization.client_id = CLIENT_ID
       @client.authorization.client_secret = CLIENT_SECRET
       @client.authorization.scope = OAUTH_SCOPE

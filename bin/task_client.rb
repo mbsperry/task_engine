@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'socket'
+require 'daemons'
+require 'pry'
+require_relative 'task_server'
 
 
 def test_io
@@ -12,6 +15,8 @@ def test_io
 end
 
 def create_loop
+  print "Say when:"
+  gets
   loop do
     exit_flag = false
     s = TCPSocket.new('0.0.0.0', 4481)
@@ -43,5 +48,11 @@ def create_loop
 
   end
 end
+
+auth_file = Pathname.new(Pathname.new(__FILE__).parent + "../auth.txt")
+t_server = fork {
+  task_server_main(auth_file.expand_path)
+}
+binding.pry
 
 create_loop

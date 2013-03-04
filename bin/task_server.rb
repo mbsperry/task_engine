@@ -15,6 +15,10 @@ class AppHelper
     return @engine.tasklists.map { |x| x["title"] }
   end
 
+  def get_tasklist_title(tl_index)
+    return @engine.tasklists[tl_index]["title"]
+  end
+
   def get_task_titles(index)
     return @engine.tasklists[index].tasks.map { |x| x["title"] }
   end
@@ -78,8 +82,10 @@ def task_server_main(auth_file)
       connection.puts app_helper.get_task_titles(tl_index)
     when "select_tasklist" then
       tl_index = args[1].to_i
+      connection.puts app_helper.get_tasklist_title(tl_index)
     when "get_task_lines" then
-      connection.puts app_helper.get_task_lines(tl_index)
+      index = args[1].to_i || tl_index
+      connection.puts app_helper.get_task_lines(index)
     when "update_at_index" then
       index = args[1]
     when "toggle_status" then
@@ -88,7 +94,6 @@ def task_server_main(auth_file)
       connection.puts("Unknown command")
     end
     connection.close
-
   end  
 
 end
