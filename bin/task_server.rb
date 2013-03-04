@@ -7,8 +7,8 @@ class AppHelper
 
   attr_accessor :engine
 
-  def initialize
-    @engine = TaskEngine::Engine.new
+  def initialize(auth_file)
+    @engine = TaskEngine::Engine.new(auth_file)
   end
 
   def get_tasklist_titles
@@ -53,40 +53,47 @@ class AppHelper
 
 end
 
+def task_server_main(auth_file)
 
-app_helper = AppHelper.new
-tl_index = 0
+  app_helper = AppHelper.new(auth_file)
+  tl_index = 0
 
-listener = TCPServer.new('0.0.0.0', 4481)
+  listener = TCPServer.new('0.0.0.0', 4481)
 
-Socket.accept_loop(listener) do |connection, _|
-  input = connection.gets.chomp
-  args = input.split
-  command = args[0]
-  case command
-  when "TERM" then
+  Socket.accept_loop(listener) do |connection, _|
+    input = connection.gets.chomp
+    args = input.split
+    command = args[0]
+    case command
+    when "a_test" then
+      connection.puts "This is a test"
+    when "TERM" then
+      connection.close
+      break
+    when "EXIT" then
+      connection.close
+    when "get_tasklist_titles" then
+      connection.puts app_helper.get_tasklist_titles
+    when "get_task_titles" then
+      connection.puts app_helper.get_task_titles(tl_index)
+    when "select_tasklist" then
+      tl_index = args[1].to_i
+    when "get_task_lines" then
+      connection.puts app_helper.get_task_lines(tl_index)
+    when "update_at_index" then
+      index = args[1]
+    when "toggle_status" then
+      index = args[1]
+    else
+      connection.puts("Unknown command")
+    end
     connection.close
-    break
-  when "EXIT" then
-    connection.close
-  when "get_tasklist_titles" then
-    connection.puts app_helper.get_tasklist_titles
-  when "get_task_titles" then
-    connection.puts app_helper.get_task_titles(tl_index)
-  when "select_tasklist" then
-    tl_index = args[1].to_i
-  when "get_task_lines" then
-    connection.puts app_helper.get_task_lines(tl_index)
-  when "update_at_index" then
-    index = args[1]
-  when "toggle_status" then
-    index = args[1]
-  else
-    connection.puts("Unknown command")
-  end
-  connection.close
 
-end  
+  end  
 
+end
 
-
+if $0 == __FILE__ then
+  auth_file = Pathname.new(Pathname.new(__FILE__).parent + "../auth.txt")
+  task_server_main(auth_file)
+end
