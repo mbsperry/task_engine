@@ -1,6 +1,7 @@
 require 'test/unit'
 require 'socket'
 require 'pry'
+require 'pry-debugger'
 
 require_relative '../bin/task_server.rb'
 auth_file = (Pathname.new(__FILE__) + "../auth.txt").expand_path
@@ -10,6 +11,23 @@ $server_thread = Thread.new {
   task_server_main(auth_file)
 }
 
+def server_alive?
+  tries ||= 4
+  s = TCPSocket.new("", 4481)
+  s.puts "a_test"
+  s.gets
+  s.close
+rescue
+  unless (tries-=1).zero?
+    sleep(3)
+    retry
+  else
+    raise "Connection Failed"
+  end
+end
+
+server_alive?()
+
 class TestTaskServer < Test::Unit::TestCase
 
   def setup
@@ -17,28 +35,20 @@ class TestTaskServer < Test::Unit::TestCase
   end
 
   def communicate(message)
-    tries ||= 4
-    result = []
-
     s = TCPSocket.new("", 4481)
     s.puts message
-    response = select([s],nil,nil, 1)
+    response = select([s],nil,nil, 3)
 
-    for input in response[0] do
-      if input == s then
-        while line = s.gets
-          result.push line
-        end
-      else
-        puts "Connection timeout"
+    if response[0][0] == s 
+      while line = s.gets
+        result ||= []
+        result.push line
       end
+    elsif response == nil
+      raise "Connection timeout"
     end
 
-    return result
-  rescue
-    sleep(3)
-    retry unless (tries -=1).zero?
-    raise "Connection refused"
+    result || ["No response"]
   end
 
   def test_a_test
