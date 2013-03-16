@@ -74,6 +74,8 @@ class TestTaskServer < Test::Unit::TestCase
   def test_select_tasklist
     result = self.communicate("select_tasklist #{@default_tl}")
     assert_equal("Test", result[0].chomp)
+    result2 = self.communicate("get_selected_tasklist")
+    assert_equal("Test", result2[0].chomp)
   end
 
   def test_get_task_lines
@@ -83,6 +85,14 @@ class TestTaskServer < Test::Unit::TestCase
     assert_not_equal(result2[0], result[0])
     assert_match(/\[.\] \w+/, result2[0])
   end
-    
+
+  def test_toggle_status
+    pre_result = self.communicate("get_task_lines #{@default_tl}")
+    post_result = self.communicate("toggle_status 1 3")
+    assert(post_result.length > 1, "Should have returned many task lines")
+    assert_match(/\[.\] \w+/, post_result[1])
+    assert_not_equal(pre_result[1], post_result[1])
+  end
+
 end
 

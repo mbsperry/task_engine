@@ -15,11 +15,16 @@ def test_io
 end
 
 def create_loop
-  print "Say when:"
-  gets
   loop do
     exit_flag = false
-    s = TCPSocket.new('0.0.0.0', 4481)
+    begin
+      s = TCPSocket.new('0.0.0.0', 4481)
+    rescue
+      retry
+    end
+    puts "---------------------------"
+    puts "task_server running"
+    print ">>> "
     result = select([s, STDIN], nil, nil)
 
     for input in result[0]
@@ -28,9 +33,8 @@ def create_loop
         puts s.recv(100)
       elsif input == STDIN
         i = STDIN.gets
-        if i.chomp == "EXIT"
+        if i.chomp == "quit"
           exit_flag = true 
-          s.puts("EXIT")
           break
         else
           s.puts(i)
@@ -42,7 +46,6 @@ def create_loop
     end
 
     if exit_flag == true then
-      s.close
       break
     end
 
@@ -50,9 +53,10 @@ def create_loop
 end
 
 auth_file = Pathname.new(Pathname.new(__FILE__).parent + "../auth.txt")
-t_server = fork {
-  task_server_main(auth_file.expand_path)
+puts "Waiting for task_server..."
+puts "---------------------------"
+t_server_thread = Thread.new {
+  TaskEngine::TaskServer.run(auth_file.expand_path)
 }
-binding.pry
 
 create_loop

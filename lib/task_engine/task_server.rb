@@ -2,6 +2,9 @@ require 'socket'
 require_relative '../task_engine'
 require_relative 'version.rb'
 
+# Debugging
+require 'pry'
+
 module TaskEngine
 
   class AppHelper
@@ -9,15 +12,30 @@ module TaskEngine
     attr_accessor :engine
 
     def initialize(auth_file)
-      @engine = TaskEngine::Engine.new(auth_file)
+      parent = Pathname.new(__FILE__).parent
+      @data_file = Pathname.new(parent + 'task_data').expand_path
+      if @data_file.exist?
+        File.open(@data_file, "r") { |file|
+          @engine = Marshal.load(file)
+        }
+      else
+        @engine = TaskEngine::Engine.new(auth_file)
+        self.serialize_engine
+      end
+    end
+
+    def serialize_engine
+      File.open(@data_file, "wb") { |file|
+        Marshal.dump(@engine, file)
+      }
     end
 
     def get_tasklist_titles
       return @engine.tasklists.map { |x| x["title"] }
     end
 
-    def get_tasklist_title(tl_index)
-      return @engine.tasklists[tl_index]["title"]
+    def get_tasklist_title(selected_tl_index)
+      return @engine.tasklists[selected_tl_index]["title"]
     end
 
     def get_task_titles(index)
@@ -48,7 +66,10 @@ module TaskEngine
                    when "completed" then {"status" => "needsAction",
                                           "completed" => nil}
                    end
-      result = @engine.update_task(task, tasklist, update_hash)
+      task.merge!(update_hash)
+      update_thread = Thread.new {
+        @engine.update_task(task, tasklist, update_hash)
+      }
     end
 
     def task_at_index(task_index, tasklist_index)
@@ -62,7 +83,7 @@ module TaskEngine
 
     def self.run(auth_file)
 
-      tl_index = 0
+      selected_tl_index = 0
       host = '0.0.0.0'
       port = 4481
 
@@ -88,17 +109,22 @@ module TaskEngine
         when "get_tasklist_titles" then
           connection.puts app_helper.get_tasklist_titles
         when "get_task_titles" then
-          connection.puts app_helper.get_task_titles(tl_index)
+          connection.puts app_helper.get_task_titles(selected_tl_index)
         when "select_tasklist" then
-          tl_index = args[1].to_i
-          connection.puts app_helper.get_tasklist_title(tl_index)
+          selected_tl_index = args[1].to_i
+          connection.puts app_helper.get_tasklist_title(selected_tl_index)
+        when "get_selected_tasklist" then
+          connection.puts app_helper.get_tasklist_title(selected_tl_index)
         when "get_task_lines" then
-          index = args[1].to_i || tl_index
-          connection.puts app_helper.get_task_lines(index)
+          tl_index = (args[1] && args[1].to_i) || selected_tl_index
+          connection.puts app_helper.get_task_lines(tl_index)
         when "update_at_index" then
           index = args[1]
         when "toggle_status" then
-          index = args[1]
+          task_index = args[1].to_i
+          tl_index = (args[1] && args[1].to_i) || selected_tl_index
+          result = app_helper.toggle_status(task_index, tl_index)
+          connection.puts app_helper.get_task_lines(tl_index)
         else
           connection.puts("Unknown command")
         end
@@ -108,3 +134,4 @@ module TaskEngine
     end
   end
 end
+
