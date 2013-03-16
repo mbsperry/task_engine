@@ -3,12 +3,12 @@ require 'socket'
 require 'pry'
 require 'pry-debugger'
 
-require_relative '../bin/task_server.rb'
+require_relative '../lib/task_engine/task_server.rb'
 auth_file = (Pathname.new(__FILE__) + "../auth.txt").expand_path
 
 
 $server_thread = Thread.new {
-  task_server_main(auth_file)
+  TaskEngine::TaskServer.run(auth_file)
 }
 
 def server_alive?
