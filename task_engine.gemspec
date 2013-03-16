@@ -23,6 +23,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency('guard-test')
   gem.add_development_dependency('rb-fsevent')
   gem.add_development_dependency('terminal-notifier-guard')
+  gem.add_development_dependency('pry-debugger')
 
   gem.version       = TaskEngine::VERSION
 end
