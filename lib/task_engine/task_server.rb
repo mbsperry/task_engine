@@ -50,6 +50,15 @@ module TaskEngine
       }
     end
 
+    def alive?()
+      return true
+    end
+
+    def refresh()
+      @engine.refresh
+      return "Refreshing cache"
+    end
+
     def get_tasklist_titles
       return @engine.tasklists.map { |x| x["title"] }
     end
