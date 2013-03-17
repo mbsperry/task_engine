@@ -1,4 +1,4 @@
-require 'socket'
+require 'drb/drb'
 require_relative '../task_engine'
 require_relative 'version.rb'
 
@@ -8,27 +8,40 @@ require 'pry-debugger'
 
 module TaskEngine
 
-  class AppHelper
+  class TaskServer
 
     attr_accessor :engine
 
+    def self.start(auth_file)
+      server_uri="druby://localhost:8787"
+
+      # The object that handles requests on the server
+      front_object=self.new(auth_file)
+
+      $SAFE = 1   # disable eval() and friends
+
+      DRb.start_service(server_uri, front_object)
+      # Wait for the drb server thread to finish before exiting.
+      DRb.thread.join
+    end  
+
     def initialize(auth_file)
-      @engine = TaskEngine::Engine.new(auth_file)
-
-
-#      parent = Pathname.new(__FILE__).parent
-#      @data_file = Pathname.new(parent + '../../task_data').expand_path
-#      if @data_file.exist?
-#        File.open(@data_file, "r") { |file|
-#          @engine = Marshal.load(file)
-#        }
-#        Thread.new {
-#          @engine.refresh
-#        }
-#      else
-#        @engine = TaskEngine::Engine.new(auth_file)
-#        self.serialize_engine
-#      end
+      puts "task_server version: #{VERSION}"
+      puts "Initializing task_server"
+      parent = Pathname.new(__FILE__).parent
+      @data_file = Pathname.new(parent + '../../task_data').expand_path
+      if @data_file.exist?
+        File.open(@data_file, "r") { |file|
+          @engine = Marshal.load(file)
+        }
+        Thread.new {
+          @engine.refresh
+        }
+      else
+        @engine = TaskEngine::Engine.new(auth_file)
+        self.serialize_engine
+      end
+      puts "task_engine running"
     end
 
     def serialize_engine
@@ -86,74 +99,5 @@ module TaskEngine
 
   end
 
-  class TaskServer
-
-    def self.run(auth_file)
-
-      selected_tl_index = 0
-      host = '0.0.0.0'
-      port = 4481
-
-      puts "Starting task_server, version: #{VERSION}"
-      app_helper = AppHelper.new(auth_file)
-      puts "task_engine running"
-      puts "Listening on #{host} port #{port}"
-
-      listener = TCPServer.new(host, port)
-
-      Socket.accept_loop(listener) do |connection, _|
-        input = connection.gets.chomp
-        args = input.split(', ')
-        command = args[0]
-        case command
-        when "a_test" then
-          connection.puts "This is a test"
-        when "TERM" then
-          connection.close
-          break
-        when "EXIT" then
-          connection.close
-        when "get_tasklist_titles" then
-          connection.puts app_helper.get_tasklist_titles
-        when "get_task_titles" then
-          tl_index = (args[1] && args[1].to_i) || selected_tl_index
-          connection.puts app_helper.get_task_titles(tl_index)
-        when "select_tasklist" then
-          selected_tl_index = args[1].to_i
-          connection.puts app_helper.get_tasklist_title(selected_tl_index)
-        when "get_selected_tasklist" then
-          connection.puts app_helper.get_tasklist_title(selected_tl_index)
-        when "get_task_lines" then
-          tl_index = (args[1] && args[1].to_i) || selected_tl_index
-          connection.puts app_helper.get_task_lines(tl_index)
-        when "update_at_index" then
-          index = args[1]
-        when "toggle_status" then
-          task_index = args[1].to_i
-          tl_index = (args[2] && args[2].to_i) || selected_tl_index
-          result = app_helper.toggle_status(task_index, tl_index)
-          connection.puts app_helper.get_task_lines(tl_index)
-        when "update_task_title" then
-          # REQUIRES a tasklist index
-          task_index = args[1].to_i
-          tl_index = args[2].to_i 
-          new_title = args[3]
-          app_helper.update_at_index(
-            task_index,
-            tl_index,
-            {"title" => new_title}
-          )
-          connection.puts app_helper.get_task_titles(tl_index)
-        when "refresh" then
-          app_helper.engine.refresh()
-          connection.puts "Refreshing cache"
-        else
-          connection.puts("Unknown command")
-        end
-        connection.close
-      end  
-
-    end
-  end
 end
 
