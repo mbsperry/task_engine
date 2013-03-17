@@ -4,6 +4,7 @@ require_relative 'version.rb'
 
 # Debugging
 require 'pry'
+require 'pry-debugger'
 
 module TaskEngine
 
@@ -12,16 +13,22 @@ module TaskEngine
     attr_accessor :engine
 
     def initialize(auth_file)
-      parent = Pathname.new(__FILE__).parent
-      @data_file = Pathname.new(parent + 'task_data').expand_path
-      if @data_file.exist?
-        File.open(@data_file, "r") { |file|
-          @engine = Marshal.load(file)
-        }
-      else
-        @engine = TaskEngine::Engine.new(auth_file)
-        self.serialize_engine
-      end
+      @engine = TaskEngine::Engine.new(auth_file)
+
+
+#      parent = Pathname.new(__FILE__).parent
+#      @data_file = Pathname.new(parent + '../../task_data').expand_path
+#      if @data_file.exist?
+#        File.open(@data_file, "r") { |file|
+#          @engine = Marshal.load(file)
+#        }
+#        Thread.new {
+#          @engine.refresh
+#        }
+#      else
+#        @engine = TaskEngine::Engine.new(auth_file)
+#        self.serialize_engine
+#      end
     end
 
     def serialize_engine
@@ -96,7 +103,7 @@ module TaskEngine
 
       Socket.accept_loop(listener) do |connection, _|
         input = connection.gets.chomp
-        args = input.split
+        args = input.split(', ')
         command = args[0]
         case command
         when "a_test" then
@@ -109,7 +116,8 @@ module TaskEngine
         when "get_tasklist_titles" then
           connection.puts app_helper.get_tasklist_titles
         when "get_task_titles" then
-          connection.puts app_helper.get_task_titles(selected_tl_index)
+          tl_index = (args[1] && args[1].to_i) || selected_tl_index
+          connection.puts app_helper.get_task_titles(tl_index)
         when "select_tasklist" then
           selected_tl_index = args[1].to_i
           connection.puts app_helper.get_tasklist_title(selected_tl_index)
@@ -122,9 +130,23 @@ module TaskEngine
           index = args[1]
         when "toggle_status" then
           task_index = args[1].to_i
-          tl_index = (args[1] && args[1].to_i) || selected_tl_index
+          tl_index = (args[2] && args[2].to_i) || selected_tl_index
           result = app_helper.toggle_status(task_index, tl_index)
           connection.puts app_helper.get_task_lines(tl_index)
+        when "update_task_title" then
+          # REQUIRES a tasklist index
+          task_index = args[1].to_i
+          tl_index = args[2].to_i 
+          new_title = args[3]
+          app_helper.update_at_index(
+            task_index,
+            tl_index,
+            {"title" => new_title}
+          )
+          connection.puts app_helper.get_task_titles(tl_index)
+        when "refresh" then
+          app_helper.engine.refresh()
+          connection.puts "Refreshing cache"
         else
           connection.puts("Unknown command")
         end

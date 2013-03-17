@@ -3,6 +3,7 @@
 require 'socket'
 require 'daemons'
 require 'pry'
+require 'pry-debugger'
 require_relative 'task_server'
 
 
@@ -52,7 +53,7 @@ def create_loop
   end
 end
 
-auth_file = Pathname.new(Pathname.new(__FILE__).parent + "../auth.txt")
+auth_file = Pathname.new(Pathname.new(__FILE__).parent + "../../auth.txt")
 puts "Waiting for task_server..."
 puts "---------------------------"
 t_server_thread = Thread.new {

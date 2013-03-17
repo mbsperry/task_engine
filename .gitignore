@@ -1,6 +1,7 @@
 Gemfile.lock
 .DS_Store
 auth.txt
+task_data
 rbc13.log
 pkg/
 .bundle

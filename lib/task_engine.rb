@@ -38,6 +38,13 @@ module TaskEngine
       }
     end
 
+    def refresh
+      get_tasklists
+      @tasklists.each { |tl|
+        get_tasks(tl)
+      }
+    end
+
     # Create a new API @client & load the Google Drive API 
     def setup
       @client = Google::APIClient.new(
@@ -57,7 +64,7 @@ module TaskEngine
 
       # Does auth code exist?
       # Or get a new one and exchange it for the access token
-      if auth_file
+      if auth_file && File.exists?(auth_file)
         File.open(auth_file, "r") { |file|
           @client.authorization.refresh_token = file.gets.chomp.decrypt
           @client.authorization.grant_type = 'refresh_token'
