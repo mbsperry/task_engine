@@ -1,14 +1,25 @@
 require 'test/unit'
 require_relative '../lib/task_engine'
 
+# Development
+require 'pry'
+require 'pry-debugger'
+
 class TestTaskEngine < Test::Unit::TestCase
 
-  @@engine = TaskEngine::Engine.new
+  @@first_time = true
+
+  def first_setup()
+    supervisor = TaskEngine::Engine.supervise_as :eng 
+    @@engine = Celluloid::Actor[:eng]
+  end
 
   def setup 
+    first_setup() if @@first_time == true
     @testlist_index = @@engine.tasklists.index { |x| x["title"] == "Test" }     # use the testing tasklist
     @default_tl = @@engine.tasklists[@testlist_index]
     @default_task = @default_tl.tasks[0]
+    @@first_time = false
   end
 
   def test_get_tasklists

@@ -2,6 +2,7 @@ require 'rubygems'
 require 'google/api_client'
 require 'launchy'
 require 'encryptor'
+require 'celluloid'
 
 # A simple Hash wrapper that includes a tasks instance variable
 # @tasks is an array which holds hashes of the tasks
@@ -16,6 +17,7 @@ module TaskEngine
   end
 
   class Engine
+    include Celluloid
 
     CLIENT_ID = '899384542577.apps.googleusercontent.com'
     CLIENT_SECRET = 'zHFuLpyVtJRQ0qP-WZki2DCO'

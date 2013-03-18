@@ -2,25 +2,29 @@ require 'test/unit'
 require 'drb/drb'
 require 'pry'
 require 'pry-debugger'
+require 'celluloid'
 
 require_relative '../lib/task_engine/task_server.rb'
+
+# Setup task_server
+SERVER_URI="druby://localhost:8787"
 auth_file = (Pathname.new(__FILE__) + "../auth.txt").expand_path
 
-SERVER_URI="druby://localhost:8787"
+class WorkerBee
+  include Celluloid
 
-server_thread = Thread.new {
-  TaskEngine::TaskServer.start(auth_file)
-}
+  def run_server(auth_file)
+    TaskEngine::ServerStarter.new(auth_file)
+  end
+end
 
-puts "Starting DRb"
+
 DRb.start_service("druby://localhost:0")
-
 $task_server = DRbObject.new_with_uri(SERVER_URI)
 
-puts "Testing for connectivity"
 def server_alive?
   tries ||= 4
-  $task_server.alive?
+  $task_server.running?()
 rescue
   unless (tries-=1).zero?
     sleep(3)
@@ -38,28 +42,11 @@ class TestTaskServer < Test::Unit::TestCase
     @default_tl = 3
   end
 
-  def communicate(message)
-    s = TCPSocket.new("", 4481)
-    s.puts message
-    response = select([s],nil,nil, 3)
-
-    if response[0][0] == s 
-      while line = s.gets
-        result ||= []
-        result.push line
-      end
-    elsif response == nil
-      raise "Connection timeout"
-    end
-
-    result || ["No response"]
-  end
-
   # def test_select_tasklist
-  #   result = self.communicate("select_tasklist, #{@default_tl}")
-  #   assert_equal("Test", result[0].chomp)
-  #   result2 = self.communicate("get_selected_tasklist")
-  #   assert_equal("Test", result2[0].chomp)
+  #   result = $task_server.select_tasklist(@default_tl)
+  #   assert_equal("Test", result[0])
+  #   result2 = $task_server.get_selected_tasklist()
+  #   assert_equal("Test", result2[0])
   # end
 
   def test_get_tasklist_titles
@@ -84,6 +71,12 @@ class TestTaskServer < Test::Unit::TestCase
     assert_match(/\[.\] \w+/, result2[0])
   end
 
+  def test_task_at_index
+    t_list = $task_server.get_task_titles(@default_tl)
+    task = $task_server.task_at_index(0, @default_tl)
+    assert_equal(t_list[0], task["title"])
+  end
+
   def test_toggle_status
     pre_result = $task_server.get_task_lines(@default_tl)
     $task_server.toggle_status(1,@default_tl)
@@ -106,6 +99,17 @@ class TestTaskServer < Test::Unit::TestCase
     assert_not_equal(pre_result[0], post_result[0])
 
     $task_server.update_at_index(0,@default_tl,{"title" => old_title})
+  end
+
+  def test_new_task
+    t_list = $task_server.get_task_titles(@default_tl)
+    $task_server.new_task("new task", @default_tl)
+    post_list = $task_server.get_task_titles(@default_tl)
+    assert_equal(t_list.length + 1, post_list.length)
+    assert(post_list.include?("new task"))
+
+    #cleanup
+    $task_server.delete_task(0, @default_tl)
   end
     
 
