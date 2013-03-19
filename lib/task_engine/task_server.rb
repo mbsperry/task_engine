@@ -10,6 +10,9 @@ require 'pry-debugger'
 
 module TaskEngine
 
+  # Thanks to http://http://burgestrand.se/code/ruby-thread-pool/ for
+  # the excellent thread pool idea. This is a much simplified version b/c
+  # I really only need one worker.
   class Worker
 
     def initialize
