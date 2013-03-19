@@ -1,4 +1,6 @@
 require 'drb/drb'
+require 'thread'
+
 require_relative '../task_engine'
 require_relative 'version.rb'
 
@@ -7,6 +9,32 @@ require 'pry'
 require 'pry-debugger'
 
 module TaskEngine
+
+  class Worker
+
+    def initialize
+      @queue = Queue.new
+
+      @thread = Thread.new do
+        catch(:exit) do
+          loop do
+            job, args = @queue.pop
+            job.call(*args)
+          end
+        end
+      end
+    end
+
+    def schedule(*args, &block)
+      @queue.push [block, args]
+    end
+
+    def shutdown
+      schedule { throw :exit }
+      @thread.join
+    end
+
+  end
 
   class TaskServer
 
@@ -28,13 +56,16 @@ module TaskEngine
     def initialize(auth_file)
       puts "task_server version: #{VERSION}"
       puts "Initializing task_server"
+
+      @worker = Worker.new
       parent = Pathname.new(__FILE__).parent
       @data_file = Pathname.new(parent + '../../task_data').expand_path
+
       if @data_file.exist?
         File.open(@data_file, "r") { |file|
           @engine = Marshal.load(file)
         }
-        Thread.new {
+        @worker.schedule {
           @engine.refresh
         }
       else
@@ -55,7 +86,9 @@ module TaskEngine
     end
 
     def refresh()
-      @engine.refresh
+      @worker.schedule {
+        @engine.refresh
+      }
       return "Refreshing cache"
     end
 
@@ -84,7 +117,10 @@ module TaskEngine
     def update_at_index(task_index, tasklist_index, update_hash)
       tasklist = @engine.tasklists[tasklist_index]
       task = tasklist.tasks[task_index]
-      @engine.update_task(task, tasklist, update_hash)
+      task.merge!(update_hash)
+      @worker.schedule {
+        @engine.update_task(task, tasklist, update_hash)
+      }
     end
 
     def toggle_status(task_index, tasklist_index)
@@ -96,7 +132,7 @@ module TaskEngine
                                           "completed" => nil}
                    end
       task.merge!(update_hash)
-      update_thread = Thread.new {
+      @worker.schedule {
         @engine.update_task(task, tasklist, update_hash)
       }
     end
@@ -106,6 +142,22 @@ module TaskEngine
       return task
     end
 
+    def new_task(task_name, tl_index)
+      tasklist = @engine.tasklists[tl_index]
+      new_task = { "title" => task_name }
+      tasklist.tasks.push new_task
+      @worker.schedule {
+        result = @engine.insert_task(new_task, tasklist)
+      }
+    end
+
+    def delete_task(task_index, tl_index)
+      tasklist = @engine.tasklists[tl_index]
+      task = tasklist.tasks[task_index]
+      @worker.schedule {
+        result = @engine.delete_task(task, tasklist)
+      }
+    end
   end
 
 end

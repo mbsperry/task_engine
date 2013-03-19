@@ -17,7 +17,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency('google-api-client', '>=0.5')
   gem.add_dependency('launchy', '>= 2.1.1')
   gem.add_dependency('encryptor')
-  gem.add_dependency('daemons')
 
   gem.add_development_dependency('guard')
   gem.add_development_dependency('guard-test')
