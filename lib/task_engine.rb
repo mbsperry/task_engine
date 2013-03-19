@@ -2,37 +2,10 @@ require 'rubygems'
 require 'google/api_client'
 require 'launchy'
 require 'encryptor'
-require 'thread'
 
 # A simple Hash wrapper that includes a tasks instance variable
 # @tasks is an array which holds hashes of the tasks
 module TaskEngine
-
-  class Worker
-
-    def initialize
-      @jobs = Queue.new
-      @thread = Thread.new do
-        catch(:exit) do
-          loop do
-            job, args = @jobs.pop
-            job.call(*args)
-          end
-        end
-      end
-    end
-
-    def schedule(*args, &block)
-      @jobs << [block, args]
-    end
-
-    def shutdown
-      schedule { throw :exit }
-
-      @thread.join
-    end
-
-  end
 
   class Tasklist < Hash
     attr_accessor :tasks
