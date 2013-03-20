@@ -37,6 +37,10 @@ module TaskEngine
       @thread.join
     end
 
+    def status
+      return @thread.status
+    end
+
   end
 
   class TaskServer
@@ -64,17 +68,18 @@ module TaskEngine
       parent = Pathname.new(__FILE__).parent
       @data_file = Pathname.new(parent + '../../task_data').expand_path
 
-      if @data_file.exist?
-        File.open(@data_file, "r") { |file|
-          @engine = Marshal.load(file)
-        }
-        @worker.schedule {
-          @engine.refresh
-        }
-      else
-        @engine = TaskEngine::Engine.new(auth_file)
-        self.serialize_engine
-      end
+#      if @data_file.exist?
+#        File.open(@data_file, "r") { |file|
+#          @engine = Marshal.load(file)
+#        }
+#        @worker.schedule {
+#          @engine.refresh
+#        }
+#      else
+#        @engine = TaskEngine::Engine.new(auth_file)
+#        self.serialize_engine
+#      end
+      @engine = TaskEngine::Engine.new(auth_file)
       puts "task_engine running"
     end
 
@@ -157,6 +162,7 @@ module TaskEngine
     def delete_task(task_index, tl_index)
       tasklist = @engine.tasklists[tl_index]
       task = tasklist.tasks[task_index]
+      tasklist.tasks.delete_at(task_index)
       @worker.schedule {
         result = @engine.delete_task(task, tasklist)
       }

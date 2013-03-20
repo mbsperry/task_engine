@@ -108,15 +108,17 @@ class TestTaskServer < Test::Unit::TestCase
     $task_server.update_at_index(0,@default_tl,{"title" => old_title})
   end
 
-  def test_new_task
+  def test_new_task_and_delete_task
     t_list = $task_server.get_task_titles(@default_tl)
     $task_server.new_task("new task", @default_tl)
     post_list = $task_server.get_task_titles(@default_tl)
     assert_equal(t_list.length + 1, post_list.length)
     assert(post_list.include?("new task"))
 
-    #cleanup
+    # Test delete_task
     $task_server.delete_task(0, @default_tl)
+    after_del_list = $task_server.get_task_titles(@default_tl) 
+    assert_equal(t_list.length, after_del_list.length)
   end
 
 end
