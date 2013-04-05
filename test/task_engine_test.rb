@@ -23,6 +23,19 @@ class TestTaskEngine < Test::Unit::TestCase
     assert_equal(true, @@engine.tasklists[@testlist_index].tasks[0].key?("title"))
   end
 
+  def test_tasks_sorted
+    sorted = true
+    in_order = false
+    @default_tl.tasks.each do |task|
+      if task["status"] == "completed" && in_order == false
+        in_order = true
+      elsif (task["status"] != "completed") && in_order == true
+        sorted = false
+      end
+    end
+    assert_equal(true, sorted)
+  end
+
   def test_insert_task
     task_count = @@engine.tasklists[@testlist_index].tasks.size
     new_task = {"title" => "Fifth"}

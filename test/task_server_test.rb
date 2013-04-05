@@ -35,32 +35,9 @@ server_alive?()
 class TestTaskServer < Test::Unit::TestCase
 
   def setup
-    @default_tl = 3
+    @default_tl = $task_server.get_tasklist_titles.index { |s| s == "Test" }     # use the testing tasklist
+    assert_equal("Test", $task_server.get_tasklist_titles[@default_tl])
   end
-
-  def communicate(message)
-    s = TCPSocket.new("", 4481)
-    s.puts message
-    response = select([s],nil,nil, 3)
-
-    if response[0][0] == s 
-      while line = s.gets
-        result ||= []
-        result.push line
-      end
-    elsif response == nil
-      raise "Connection timeout"
-    end
-
-    result || ["No response"]
-  end
-
-  # def test_select_tasklist
-  #   result = self.communicate("select_tasklist, #{@default_tl}")
-  #   assert_equal("Test", result[0].chomp)
-  #   result2 = self.communicate("get_selected_tasklist")
-  #   assert_equal("Test", result2[0].chomp)
-  # end
 
   def test_get_tasklist_titles
     result = $task_server.get_tasklist_titles

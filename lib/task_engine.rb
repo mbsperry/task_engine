@@ -11,6 +11,7 @@ module TaskEngine
     attr_accessor :tasks
   end
 
+  # Currently unused
   class Task < Hash
     attr_accessor :parent
   end
@@ -22,7 +23,7 @@ module TaskEngine
     OAUTH_SCOPE = 'https://www.googleapis.com/auth/tasks'
     REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
-    Encryptor.default_options.merge!(:key => CLIENT_ID)
+    Encryptor.default_options.merge!(key: CLIENT_ID)
 
     attr_reader :client
     attr_accessor :tasklists
@@ -48,8 +49,8 @@ module TaskEngine
     # Create a new API @client & load the Google Drive API 
     def setup
       @client = Google::APIClient.new(
-        :application_name => 'Task Engine',
-        :application_version => '0.1' )
+        application_name: 'Task Engine',
+        application_version: '0.1' )
       @api = @client.discovered_api('tasks', 'v1')
     end
 
@@ -99,9 +100,10 @@ module TaskEngine
     def get_tasks(tasklist)
       tasklist_id = tasklist["id"]
       tasklist.tasks = @client.execute(
-        :api_method => @api.tasks.list,
-        :parameters => {:tasklist => tasklist_id}
+        api_method: @api.tasks.list,
+        parameters: {tasklist: tasklist_id}
       ).data.to_hash["items"]
+      tasklist.tasks.sort! { |a,b| -(a["status"] <=> b["status"]) }
     end
 
     # Inserts a task into a task list.
@@ -109,17 +111,17 @@ module TaskEngine
     # of the TaskEngine.
     def insert_task(task, tasklist)
       result = @client.execute(
-        :api_method => @api.tasks.insert,
-        :body_object => task,
-        :parameters => {:tasklist => tasklist["id"]}
+        api_method: @api.tasks.insert,
+        body_object: task,
+        parameters: {tasklist: tasklist["id"]}
       )
       get_tasks(tasklist)
     end
 
     def delete_task(task, tasklist)
       result = @client.execute(
-        :api_method => @api.tasks.delete,
-        :parameters => {:tasklist => tasklist["id"], :task => task["id"]}
+        api_method: @api.tasks.delete,
+        parameters: {tasklist: tasklist["id"], task: task["id"]}
       )
       get_tasks(tasklist)
       
@@ -127,9 +129,9 @@ module TaskEngine
 
     def update_task(task, tasklist, update_hash)
       results = @client.execute(
-        :api_method => @api.tasks.patch,
-        :body_object => update_hash,
-        :parameters => {:tasklist => tasklist["id"], :task => task["id"]}
+        api_method: @api.tasks.patch,
+        body_object: update_hash,
+        parameters: {tasklist: tasklist["id"], task: task["id"]}
       )
       get_tasks(tasklist)
       return tasklist.tasks.select { |h| h["id"] == task["id"] }[0]
