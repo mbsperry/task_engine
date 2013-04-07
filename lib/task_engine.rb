@@ -36,6 +36,7 @@ module TaskEngine
       get_tasklists
       @tasklists.each { |tl|
         get_tasks(tl)
+        #sort_tasks(tl)
       }
     end
 
@@ -103,6 +104,9 @@ module TaskEngine
         api_method: @api.tasks.list,
         parameters: {tasklist: tasklist_id}
       ).data.to_hash["items"]
+    end
+
+    def sort_tasks(tasklist)
       tasklist.tasks.sort! { |a,b| -(a["status"] <=> b["status"]) }
     end
 

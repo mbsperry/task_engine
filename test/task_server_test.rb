@@ -1,7 +1,7 @@
 require 'test/unit'
 require 'drb/drb'
-require 'pry'
-require 'pry-debugger'
+#require 'pry'
+#require 'pry-debugger'
 
 require_relative '../lib/task_engine/task_server.rb'
 auth_file = (Pathname.new(__FILE__) + "../auth.txt").expand_path

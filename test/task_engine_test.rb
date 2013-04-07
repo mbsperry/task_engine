@@ -23,7 +23,8 @@ class TestTaskEngine < Test::Unit::TestCase
     assert_equal(true, @@engine.tasklists[@testlist_index].tasks[0].key?("title"))
   end
 
-  def test_tasks_sorted
+  def test_sort_tasks
+    @@engine.sort_tasks(@default_tl)
     sorted = true
     in_order = false
     @default_tl.tasks.each do |task|

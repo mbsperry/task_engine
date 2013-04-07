@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'drb/drb'
-require 'pry'
-require 'pry-debugger'
+#require 'pry'
+#require 'pry-debugger'
 require_relative 'task_server.rb'
 
 

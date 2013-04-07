@@ -5,8 +5,8 @@ require_relative '../task_engine'
 require_relative 'version.rb'
 
 # Debugging
-require 'pry'
-require 'pry-debugger'
+#require 'pry'
+#require 'pry-debugger'
 
 module TaskEngine
 
@@ -120,6 +120,11 @@ module TaskEngine
           status_string = "[X]"
         end
         "#{status_string} #{x["title"]}" }
+    end
+
+    def sort_tasks(tl_index)
+      tasklist = @engine.tasklists[tl_index]
+      @engine.sort_tasks(tasklist)
     end
 
     def update_at_index(task_index, tasklist_index, update_hash)
