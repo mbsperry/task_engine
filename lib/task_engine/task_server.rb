@@ -158,7 +158,7 @@ module TaskEngine
     def new_task(task_name, tl_index)
       tasklist = @engine.tasklists[tl_index]
       new_task = { "title" => task_name }
-      tasklist.tasks.push new_task
+      tasklist.tasks.unshift new_task
       @worker.schedule {
         result = @engine.insert_task(new_task, tasklist)
       }
