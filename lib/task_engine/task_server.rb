@@ -114,10 +114,10 @@ module TaskEngine
 
     def get_task_lines(index)
       return @engine.tasklists[index].tasks.map { |x| 
-        if x["status"] == "needsAction"
-          status_string = "[ ]"
-        else x["status"] == "completed"
+        if x["status"] == "completed"
           status_string = "[X]"
+        else
+          status_string = "[ ]"
         end
         "#{status_string} #{x["title"]}" }
     end
