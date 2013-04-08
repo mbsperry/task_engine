@@ -8,7 +8,27 @@ require_relative 'version.rb'
 #require 'pry'
 #require 'pry-debugger'
 
+S_URI="druby://localhost:8787"
+
 module TaskEngine
+
+  def self.start_server
+
+    data_folder = Pathname.new('~/.task_server/').expand_path
+    unless data_folder.exist?
+      Dir.mkdir(data_folder, 0700)
+    end
+
+    auth_file = data_folder + 'gt'
+    # The object that handles requests on the server
+    front_object=TaskEngine::TaskServer.new(auth_file)
+
+    $SAFE = 1   # disable eval() and friends
+
+    DRb.start_service(S_URI, front_object)
+    # Wait for the drb server thread to finish before exiting.
+    DRb.thread.join
+  end
 
   # Thanks to http://http://burgestrand.se/code/ruby-thread-pool/ for
   # the excellent thread pool idea. This is a much simplified version b/c
@@ -46,19 +66,6 @@ module TaskEngine
   class TaskServer
 
     attr_accessor :engine
-
-    def self.start(auth_file)
-      server_uri="druby://localhost:8787"
-
-      # The object that handles requests on the server
-      front_object=self.new(auth_file)
-
-      $SAFE = 1   # disable eval() and friends
-
-      DRb.start_service(server_uri, front_object)
-      # Wait for the drb server thread to finish before exiting.
-      DRb.thread.join
-    end  
 
     def initialize(auth_file)
       puts "task_server version: #{VERSION}"
@@ -172,6 +179,7 @@ module TaskEngine
         result = @engine.delete_task(task, tasklist)
       }
     end
+
   end
 
 end
