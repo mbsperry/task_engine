@@ -80,11 +80,13 @@ module TaskEngine
         File.open(auth_file, "w") { |file|
           file.puts @client.authorization.refresh_token.encrypt
         }
+        File.chmod(0600, auth_file)
       end
     end
 
     # Retrieves all the tasklists
     def get_tasklists
+      @tasklists = []
       array = @client.execute(@api.tasklists.list).data.to_hash["items"]
       array.each { |h|
         @tasklists.push Tasklist[h]

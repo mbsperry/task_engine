@@ -9,17 +9,17 @@ require_relative 'version.rb'
 #require 'pry-debugger'
 
 S_URI="druby://localhost:8787"
+DATA_FOLDER = Pathname.new('~/.task_server/').expand_path
 
 module TaskEngine
 
   def self.start_server
 
-    data_folder = Pathname.new('~/.task_server/').expand_path
-    unless data_folder.exist?
-      Dir.mkdir(data_folder, 0700)
+    unless DATA_FOLDER.exist?
+      Dir.mkdir(DATA_FOLDER, 0700)
     end
 
-    auth_file = data_folder + 'gt'
+    auth_file = DATA_FOLDER + 'gt'
     # The object that handles requests on the server
     front_object=TaskEngine::TaskServer.new(auth_file)
 
@@ -72,26 +72,25 @@ module TaskEngine
       puts "Initializing task_server"
 
       @worker = Worker.new
-      parent = Pathname.new(__FILE__).parent
-      @data_file = Pathname.new(parent + '../../task_data').expand_path
+      @data_file = Pathname.new(DATA_FOLDER + 'task_data').expand_path
 
-#      if @data_file.exist?
-#        File.open(@data_file, "r") { |file|
-#          @engine = Marshal.load(file)
-#        }
-#        @worker.schedule {
-#          @engine.refresh
-#        }
-#      else
-#        @engine = TaskEngine::Engine.new(auth_file)
-#        self.serialize_engine
-#      end
-      @engine = TaskEngine::Engine.new(auth_file)
+      if @data_file.exist?
+        File.open(@data_file, "r") { |file|
+          @engine = Marshal.load(file)
+        }
+        @worker.schedule {
+          @engine.refresh
+        }
+      else
+        @engine = Engine.new(auth_file)
+        serialize_engine()
+      end
+      #@engine = TaskEngine::Engine.new(auth_file)
       puts "task_engine running"
     end
 
     def serialize_engine
-      File.open(@data_file, "wb") { |file|
+      File.open(@data_file, "wb", 0600) { |file|
         Marshal.dump(@engine, file)
       }
     end
@@ -101,6 +100,7 @@ module TaskEngine
     end
 
     def refresh()
+      serialize_engine()
       @worker.schedule {
         @engine.refresh
       }
