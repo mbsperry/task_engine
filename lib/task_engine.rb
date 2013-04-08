@@ -28,7 +28,7 @@ module TaskEngine
     attr_reader :client
     attr_accessor :tasklists
 
-    def initialize(auth_file=nil)
+    def initialize(auth_file)
       @tasklists = []
 
       setup
@@ -72,18 +72,12 @@ module TaskEngine
           @client.authorization.grant_type = 'refresh_token'
           auth = @client.authorization.fetch_access_token!
         }
-      elsif File.exists?("auth.txt")
-        File.open("auth.txt", "r") { |file|
-          @client.authorization.refresh_token = file.gets.chomp.decrypt
-          @client.authorization.grant_type = 'refresh_token'
-          auth = @client.authorization.fetch_access_token!
-        }
       else
         Launchy.open(uri)
         $stdout.write  "Enter authorization code: "
         @client.authorization.code = gets.chomp
         auth = @client.authorization.fetch_access_token!
-        File.open("auth.txt", "w") { |file|
+        File.open(auth_file, "w") { |file|
           file.puts @client.authorization.refresh_token.encrypt
         }
       end
