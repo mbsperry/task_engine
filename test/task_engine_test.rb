@@ -1,9 +1,15 @@
 require 'test/unit'
 require_relative '../lib/task_engine'
 
+# TODO:
+# Consolidate new and delete tasks, make sure to reset
+# State at end of test
+
+
 class TestTaskEngine < Test::Unit::TestCase
 
-  @@engine = TaskEngine::Engine.new
+  AUTH_FILE = Pathname.new('~/.task_server/gt').expand_path
+  @@engine = TaskEngine::Engine.new(AUTH_FILE)
 
   def setup 
     @testlist_index = @@engine.tasklists.index { |x| x["title"] == "Test" }     # use the testing tasklist

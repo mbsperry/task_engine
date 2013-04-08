@@ -5,32 +5,15 @@ require_relative '../task_engine'
 require_relative 'version.rb'
 
 # Debugging
-#require 'pry'
-#require 'pry-debugger'
+require 'pry'
+require 'pry-debugger'
 
 S_URI="druby://localhost:8787"
 DATA_FOLDER = Pathname.new('~/.task_server/').expand_path
 
 module TaskEngine
 
-  def self.start_server
-
-    unless DATA_FOLDER.exist?
-      Dir.mkdir(DATA_FOLDER, 0700)
-    end
-
-    auth_file = DATA_FOLDER + 'gt'
-    # The object that handles requests on the server
-    front_object=TaskEngine::TaskServer.new(auth_file)
-
-    $SAFE = 1   # disable eval() and friends
-
-    DRb.start_service(S_URI, front_object)
-    # Wait for the drb server thread to finish before exiting.
-    DRb.thread.join
-  end
-
-  # Thanks to http://http://burgestrand.se/code/ruby-thread-pool/ for
+  # Thanks to http://burgestrand.se/code/ruby-thread-pool/ for
   # the excellent thread pool idea. This is a much simplified version b/c
   # I really only need one worker.
   class Worker
@@ -58,7 +41,11 @@ module TaskEngine
     end
 
     def status
-      return @thread.status
+      @thread.status
+    end
+
+    def queue_length
+      @queue.length
     end
 
   end
@@ -67,12 +54,18 @@ module TaskEngine
 
     attr_accessor :engine
 
-    def initialize(auth_file)
+    def initialize
       puts "task_server version: #{VERSION}"
       puts "Initializing task_server"
 
-      @worker = Worker.new
+      unless DATA_FOLDER.exist?
+        Dir.mkdir(DATA_FOLDER, 0700)
+      end
+
+      auth_file = DATA_FOLDER + 'gt'
       @data_file = Pathname.new(DATA_FOLDER + 'task_data').expand_path
+
+      @worker = Worker.new
 
       if @data_file.exist?
         File.open(@data_file, "r") { |file|
@@ -87,6 +80,26 @@ module TaskEngine
       end
       #@engine = TaskEngine::Engine.new(auth_file)
       puts "task_engine running"
+    end
+
+    def start_server
+      # The object that handles requests on the server
+      front_object=self
+
+      $SAFE = 0   # disable eval() and friends
+
+      DRb.start_service(S_URI, front_object)
+      # Wait for the drb server thread to finish before exiting.
+      trap("INT") do
+        puts "Shutting down"
+        @worker.shutdown
+        Thread.kill(DRb.thread)
+      end
+      DRb.thread.join
+    end
+
+    def working?
+      @worker.queue_length > 0 ? true : false
     end
 
     def serialize_engine
@@ -104,7 +117,6 @@ module TaskEngine
       @worker.schedule {
         @engine.refresh
       }
-      return "Refreshing cache"
     end
 
     def get_tasklist_titles

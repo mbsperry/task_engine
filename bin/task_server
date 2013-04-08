@@ -2,4 +2,6 @@
 
 require_relative '../lib/task_engine/task_server.rb'
 
-TaskEngine.start_server
+server = TaskEngine::TaskServer.new
+server.start_server
+

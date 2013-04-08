@@ -1,15 +1,15 @@
 require 'test/unit'
 require 'drb/drb'
-#require 'pry'
-#require 'pry-debugger'
+require 'pry'
+require 'pry-debugger'
 
 require_relative '../lib/task_engine/task_server.rb'
-auth_file = (Pathname.new(__FILE__) + "../auth.txt").expand_path
 
 SERVER_URI="druby://localhost:8787"
 
 server_thread = Thread.new {
-  TaskEngine::TaskServer.start(auth_file)
+  server = TaskEngine::TaskServer.new
+  server.start_server
 }
 
 puts "Starting DRb"
@@ -19,7 +19,7 @@ $task_server = DRbObject.new_with_uri(SERVER_URI)
 
 puts "Testing for connectivity"
 def server_alive?
-  tries ||= 4
+  tries ||= 4000
   $task_server.alive?
 rescue
   unless (tries-=1).zero?
@@ -37,6 +37,11 @@ class TestTaskServer < Test::Unit::TestCase
   def setup
     @default_tl = $task_server.get_tasklist_titles.index { |s| s == "Test" }     # use the testing tasklist
     assert_equal("Test", $task_server.get_tasklist_titles[@default_tl])
+
+    # Let previous tests finish uploading to server before starting the next batch
+    while $task_server.working?
+      sleep 1
+    end
   end
 
   def test_get_tasklist_titles
@@ -69,9 +74,6 @@ class TestTaskServer < Test::Unit::TestCase
   end
 
   def test_update_task_title
-    refreshed = $task_server.refresh
-    assert_equal("Refreshing cache", refreshed)
-
     pre_result = $task_server.get_task_titles(@default_tl)
     old_title = pre_result[0]
     new_title = old_title + " changed"
