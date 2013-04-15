@@ -25,7 +25,7 @@ module TaskEngine
 
     Encryptor.default_options.merge!(key: CLIENT_ID)
 
-    attr_reader :client
+    attr_reader :client, :alive
     attr_accessor :tasklists
 
     def initialize(auth_file)
@@ -38,6 +38,11 @@ module TaskEngine
         get_tasks(tl)
         #sort_tasks(tl)
       }
+      @connected = true
+    end
+
+    def connected?
+      @connected
     end
 
     def refresh
@@ -115,7 +120,7 @@ module TaskEngine
         body_object: task,
         parameters: {tasklist: tasklist["id"]}
       )
-      get_tasks(tasklist)
+      #get_tasks(tasklist)
     end
 
     def delete_task(task, tasklist)
@@ -123,7 +128,7 @@ module TaskEngine
         api_method: @api.tasks.delete,
         parameters: {tasklist: tasklist["id"], task: task["id"]}
       )
-      get_tasks(tasklist)
+      #get_tasks(tasklist)
       
     end
 
@@ -133,8 +138,8 @@ module TaskEngine
         body_object: update_hash,
         parameters: {tasklist: tasklist["id"], task: task["id"]}
       )
-      get_tasks(tasklist)
-      return tasklist.tasks.select { |h| h["id"] == task["id"] }[0]
+      #get_tasks(tasklist)
+      #return tasklist.tasks.select { |h| h["id"] == task["id"] }[0]
     end 
 
   end

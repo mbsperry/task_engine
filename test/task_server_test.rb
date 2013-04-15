@@ -8,7 +8,7 @@ require_relative '../lib/task_engine/task_server.rb'
 SERVER_URI="druby://localhost:8787"
 
 server_thread = Thread.new {
-  server = TaskEngine::TaskServer.new
+  server = TaskEngine::TaskServer.new(false)
   server.start_server
 }
 
@@ -20,7 +20,9 @@ $task_server = DRbObject.new_with_uri(SERVER_URI)
 puts "Testing for connectivity"
 def server_alive?
   tries ||= 4000
-  $task_server.alive?
+  unless $task_server.engine.connected?
+    sleep 1
+  end
 rescue
   unless (tries-=1).zero?
     sleep(3)
@@ -35,13 +37,15 @@ server_alive?()
 class TestTaskServer < Test::Unit::TestCase
 
   def setup
-    @default_tl = $task_server.get_tasklist_titles.index { |s| s == "Test" }     # use the testing tasklist
-    assert_equal("Test", $task_server.get_tasklist_titles[@default_tl])
-
+    # use the testing tasklist
     # Let previous tests finish uploading to server before starting the next batch
-    while $task_server.working?
+    while $task_server.working? == "run"
       sleep 1
     end
+
+    @default_tl = 3
+    #@default_tl = $task_server.get_tasklist_titles.index { |s| s == "Test" }     
+    #assert_equal("Test", $task_server.get_tasklist_titles[@default_tl])
   end
 
   def test_get_tasklist_titles
